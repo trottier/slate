@@ -1,15 +1,12 @@
 ---
-title: API Reference
+title: HackerPet Particle Library reference
 
 language_tabs: # must be one of https://git.io/vQNgJ
-  - shell
-  - ruby
-  - python
-  - javascript
+  - cpp
 
 toc_footers:
   - <a href='#'>Sign Up for a Developer Key</a>
-  - <a href='https://github.com/lord/slate'>Documentation Powered by Slate</a>
+  - <a href='https://github.com/CleverPet/HackerPet'>HackerPet Repo</a>
 
 includes:
   - errors
@@ -19,221 +16,639 @@ search: true
 
 # Introduction
 
-Welcome to the Kittn API! You can use our API to access Kittn API endpoints, which can get information on various cats, kittens, and breeds in our database.
+HackerPet is a library for programmatically controlling a CleverPet Hub and reporting the data it produces. 
 
-We have language bindings in Shell, Ruby, Python, and JavaScript! You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
+Currently, in order to use this library you need to have a CleverPet Hub that uses a Particle Photon. These are Hubs that have a serial number beginning with the letter 'H'. Coverting your Hub into one that works with this library requires that you remove the existing CleverPet Particle Photon, and replace it with one you have set up independently. 
 
-This example API documentation page was created with [Slate](https://github.com/lord/slate). Feel free to edit it and use it as a base for your own API's documentation.
+A few things to note: 
+* "Touchpad" and "pad" are the preferred ways to refer to the touchpads. Sometimes, however, you may see a reference to a button. There is no difference. 
+* While most humans have trichromatic vision (all the colors we can see can be described as a combination of red, green, and blue), most dogs and cats are dichromats, able to see the equivalent of yellow and blue. This means that we usually only care about color settings expressed as "BY" rather than "RGB".
 
-# Authentication
+## Getting started
 
-> To authorize, use this code:
+HackerPet, along with the complete training curriculum, exists as a library on the Particle platform. One way to access it is through the [Web IDE](https://build.particle.io/libs/hackerpet/). From there you can use one of the example games and flash it to your CleverPet Hub.
 
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
+```cpp
+#include <hackerpet.h>
 ```
 
-```python
-import kittn
+### Library 
 
-api = kittn.authorize('meowmeowmeow')
+All your examples must explicitly include the hackerpet library ... 
+
+```cpp
+HubInterface hub;
 ```
 
-```shell
-# With shell, you can just pass the correct header with each request
-curl "api_endpoint_here"
-  -H "Authorization: meowmeowmeow"
-```
+### HubInterface declaration
 
-```javascript
-const kittn = require('kittn');
+... and subsequently declare the variable that will be used to access your Hub's functionality.
 
-let api = kittn.authorize('meowmeowmeow');
-```
+```cpp
+void setup() {
+  
+  Serial1.begin(38400);  // needed for device layer (hub) communication
+  hub.Initialize();
 
-> Make sure to replace `meowmeowmeow` with your API key.
-
-Kittn uses API keys to allow access to the API. You can register a new Kittn API key at our [developer portal](http://example.com/developers).
-
-Kittn expects for the API key to be included in all API requests to the server in a header that looks like the following:
-
-`Authorization: meowmeowmeow`
-
-<aside class="notice">
-You must replace <code>meowmeowmeow</code> with your personal API key.
-</aside>
-
-# Kittens
-
-## Get All Kittens
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get()
-```
-
-```shell
-curl "http://example.com/api/kittens"
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let kittens = api.kittens.get();
-```
-
-> The above command returns JSON structured like this:
-
-```json
-[
-  {
-    "id": 1,
-    "name": "Fluffums",
-    "breed": "calico",
-    "fluffiness": 6,
-    "cuteness": 7
-  },
-  {
-    "id": 2,
-    "name": "Max",
-    "breed": "unknown",
-    "fluffiness": 5,
-    "cuteness": 10
-  }
-]
-```
-
-This endpoint retrieves all kittens.
-
-### HTTP Request
-
-`GET http://example.com/api/kittens`
-
-### Query Parameters
-
-Parameter | Default | Description
---------- | ------- | -----------
-include_cats | false | If set to true, the result will also include cats.
-available | true | If set to false, the result will include kittens that have already been adopted.
-
-<aside class="success">
-Remember — a happy kitten is an authenticated kitten!
-</aside>
-
-## Get a Specific Kitten
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get(2)
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get(2)
-```
-
-```shell
-curl "http://example.com/api/kittens/2"
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.get(2);
-```
-
-> The above command returns JSON structured like this:
-
-```json
-{
-  "id": 2,
-  "name": "Max",
-  "breed": "unknown",
-  "fluffiness": 5,
-  "cuteness": 10
+  // Other setup commands go here
 }
 ```
 
-This endpoint retrieves a specific kitten.
+### setup() 
 
-<aside class="warning">Inside HTML code blocks like this one, you can't use Markdown, so use <code>&lt;code&gt;</code> blocks to denote code.</aside>
 
-### HTTP Request
+Within the <code>setup</code> function make sure to setup serial communication with the rest of the Hub and then initialize it.
 
-`GET http://example.com/kittens/<ID>`
+```cpp
+void loop() {
+  
+  hub.run(20); // do 20 ms of communication with the rest of the Hub 
+  //MyOwnFunction(); 
 
-### URL Parameters
-
-Parameter | Description
---------- | -----------
-ID | The ID of the kitten to retrieve
-
-## Delete a Specific Kitten
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.delete(2)
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.delete(2)
-```
-
-```shell
-curl "http://example.com/api/kittens/2"
-  -X DELETE
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.delete(2);
-```
-
-> The above command returns JSON structured like this:
-
-```json
-{
-  "id": 2,
-  "deleted" : ":("
 }
 ```
 
-This endpoint deletes a specific kitten.
+### loop() function
 
-### HTTP Request
+Usually, you'll have a function that gets called repeatedly within loop() that will control the behavior of your Hub (presenting lights, distributing foodtreats, etc.).
 
-`DELETE http://example.com/kittens/<ID>`
 
-### URL Parameters
+# Yield macro "magic"
 
-Parameter | Description
---------- | -----------
-ID | The ID of the kitten to delete
+ The HackerPet library provides a set of macros that make programming the Hub much faster, easier, more concise, and more easily understood. These macros let you "yield" from the function, temporarily exiting and re-entering at the same location.  Essentially, these macros grab the function's line number and then jumps back to this line when the function is re-entered. This lets momentarily surrender the Photon to the HackerPet library and give it an opportunity to tell the rest of the Hub to turn on its lights, play sounds, dispense foodtreats, etc.
+
+There are a few things to consider when using yield macros:
+
+* They are ideal for moments when your code would block. E.g., during delays or when waiting for input. Yielding can also be helpful when you want to give the HubInterface a moment to send out instructions, as it can only handle so many at once.
+* Functions in which you’d like to use yield(…) must begin with a yield_begin() and a yield_finish(). This is demonstrated in the examples.
+* No recursion allowed.
+* All local variables must be static. This means that they won’t get re-initialized and receive a new value the next time the function is entered, so be sure to explicitly initialize them to the value you want on a different line. To keep things clean, any variable declarations that start with `static` should either not be initialized or be initialized to a value that's obviously "wrong". 
+* Whenever the function “yields” it returns a value. This can be helpful for telling you whether the function is actually over, or if it’s still in process.
+* It can seem a bit weird to loop over a function that’s going to be entered at a different point in its execution every time it’s called, but it works quite well and you’ll get used to it
+
+
+## Functions
+
+```cpp
+// EXAMPLE USAGE
+bool MyFunction() 
+{
+  yield_begin();
+
+  yield_wait_ms(500, false);
+
+  yield_finish();
+  return true;
+}
+```
+
+### yield_begin()
+
+Place this at start of any function that uses yield statement
+
+
+### yield_finish()
+
+Place at end of any function that uses yield statement
+
+```cpp
+//EXAMPLE USAGE
+unsigned long start_ms = millis();
+while (millis() - start_ms < 1000) // Pause for 1000 milliseconds
+{
+  yield(false); // Yield program flow (e.g. to HackerPet library)
+}
+```
+
+### yield(*bool*)
+
+Yields execution of your yield enabled function while returning ret.
+Next time your yield enabled function is called, execution will continue the
+last yield point.
+
+```cpp
+// EXAMPLE USAGE
+unsigned long start_wait = Time.now();
+yield_wait_for(Time.now() - start_wait > 10, false) // wait for 10 seconds
+```
+
+### yield_wait_for(*condition*, *bool*)
+
+Waits for a condition while yielding whenever the condition is not true.
+Passes the ret parameter whenever yielding.
+
+```cpp
+// EXAMPLE USAGE
+yield_sleep(50, false); // wait for 50 us 
+```
+
+### yield_sleep(*wait_time_in_microseconds*, *bool*)
+
+Waits for the specified number of microseconds, yielding while waiting.
+Uses particle micros() function, which overflows when it reaches 2^32
+(i.e., every ~71.6 minutes)
+
+```cpp
+// EXAMPLE USAGE
+yield_sleep_ms(300, false); // wait for 300 ms
+```
+
+### yield_sleep_ms(*wait_time_in_milliseconds*, *bool*)
+
+Waits for the specified number of milliseconds, yielding while waiting.
+Uses millis() function, which overflows and returns to zero every ~49 days
+
+
+```cpp
+// EXAMPLE USAGE 
+ yield_if(Time.now() > some_time_value, false)
+```
+
+### yield_if(*bool*, *bool*)
+
+Yields only if a condition is true (e.g. enough time has passed).
+
+
+# HubInterface
+
+## HubInterface()
+
+The constructor for the HubInterface. The HubInterface is created automatically and this constructor doesn't need to be explicitly called in most games.
+
+## Run(()
+
+```cpp
+// SYNTAX
+Run(unsigned long forHowLong)
+
+// EXAMPLE USAGE
+void loop()
+{
+  hub.Run(20);
+}
+
+```
+
+Advance the device layer state machine, but with forHowLong millisecond max time spent meant to be run every cycle of a loop() function
+
+## IsReady()
+
+```cpp
+// EXAMPLE USAGE
+bool ready_bool = hub.IsReady();
+```
+
+Whether or not the hub is ready for communication.
+
+## SetLights()
+
+```cpp
+// SYNTAX
+SetLights(unsigned char whichLights, unsigned char yellow, unsigned char blue, unsigned char slew)
+
+// EXAMPLE USAGE
+SetLights(hub.LIGHT_LEFT, 0, 80, 0); // Make the left touchpad lights blue with brightness 80
+
+// Make the left and right light touchpads "white" ("equal" parts yellow and blue) with brightness 30
+hub.SetLights(hub.LIGHT_LEFT | hub.LIGHT_RIGHT, 30, 30, 0);
+```
+
+Set light colors with slew (overloaded below for flashing) 
+
+*whichLights*: see LIGHT_... constants in this class colors and slew: can be [0, 99] each
+
+## SetLightsRGB()
+
+```cpp
+// SYNTAX
+SetLightsRGB(char whichLights, unsigned char red, unsigned char green, unsigned char blue, unsigned char slew)
+
+// EXAMPLE
+hub.SetLightsRGB(hub.LIGHT_CUE, 99, 0, 0, 0);
+```
+
+Set light colors with slew using RGB, not BY colors and slew: can be [0, 99] each
+
+## SetLights()
+
+```cpp
+// SYNTAX
+SetLights(unsigned char whichLights, unsigned char yellow, unsigned char blue, unsigned char period, unsigned char on)
+
+// EXAMPLE USAGE
+hub.SetLights(hub.LIGHT_BTNS, 80, 80, 60, 30); // Every 600 ms set light to flash for 300 
+```
+Set lights to flash with given period 
+
+*period*: [Period duration] * 10 ms. (0 => no flashing)
+
+*on*: [duty cycle] * 10 ms, must be < period 
+
+*green*, *blue*, *period*, *on*: can be in [0, 99] 
+
+## SetLightsRGB()
+```cpp
+// SYNTAX
+## SetLightsRGB(unsigned char whichLights, unsigned char red, unsigned char green, unsigned char blue, unsigned char period, unsigned char on)
+
+// EXAMPLE USAGE
+hub.SetLightsRGB(hub.LIGHT_ALL, 10, 0, 0, 99, 10); // Every 990 ms set the Hub to flash red for 10 ms
+```
+
+Set lights to flash with given period, using RGB not BY period in 10 ms increments
+
+*period*: [Period duration] * 10 ms. (0 => no flashing)
+
+*on*: [duty cycle] * 10 ms, must be < period
+
+*red*, *green*, *blue*, *period*, *on*: can be in [0, 99]
+
+## SetRandomButtonLights()
+```cpp
+// SYNTAX
+SetRandomButtonLights(unsigned char numLights, unsigned char yellow, unsigned char blue, unsigned char period, unsigned char on)
+
+// EXAMPLE USAGE
+hub.SetRandomButtonLights(2, 60, 60, 0, 0);
+```
+
+Handy function for randomly picking and illuminating a number of touchpad lights (numLights: how many. Max 3) 
+
+*returns* tgtLight: bitwise OR of light ID's selected as "targets" 
+
+*period*: in 10 ms increments, 0=no flash 
+
+*on*: duty cycle, 10 ms increments. must be < period 
+
+*yellow*, *blue*, *period*, *on*: can be [0, 99] each
+
+## PlayAudio()
+
+```cpp
+// SYNTAX
+PlayAudio(unsigned char whichAudio, unsigned char volume)
+
+// EXAMPLE USAGE
+hub.PlayAudio(hub.AUDIO_SQUEAK, 20);
+```
+
+Play audio according to specified audio file ID.
+
+*whichAudio*: see AUDIO_... constants in this class volume: [0, 99]
+
+## PlayTone()
+
+```cpp
+// SYNTAX
+PlayTone(unsigned int frequency, unsigned char volume, unsigned char slew)
+
+// EXAMPLE USAGE
+hub.PlayTone(440, 30, 0);
+```
+
+Play specified frequency through DL speaker
+
+ Variable  | Available values
+ --------- | ----------------
+ frequency | [0, 20000] Hz. frequency=0 => turn off tone.
+ volume    | [0, 99]
+ slew      | [0, 99]
+
+## PresentFoodtreat()
+
+```cpp
+// SYNTAX
+PresentFoodtreat(unsigned char duration_decisec)
+
+// EXAMPLE USAGE
+hub.PresentFoodtreat(100);
+```
+
+Presents foodtreat for specified duration, then close tray
+
+*duration_decisec*: specified amount of time (duration x 0.1 secs)
+
+Setting duration_decisec to 0 will cause the foodtreat to be presented  indefinitely (in which case **RetractTray** will need to be called to retract).
+
+
+## PresentAndCheckFoodtreat()
+```cpp
+// SYNTAX
+PresentAndCheckFoodtreat(unsigned long duration_ms)
+
+// EXAMPLE USAGE
+unsigned char pact_state = hub.PACT_BEFORE_PRESENT  hub.PACT_... are states of PresentAndCHeckFoodtreat state machine
+// Run until one of two possible final states
+while (!(pact_state == hub.PACT_RESPONSE_FOODTREAT_TAKEN || pact_state == hub.PACT_RESPONSE_FOODTREAT_NOT_TAKEN))  
+{
+    pact_state = hub.PresentAndCheckFoodtreat(1000);  state machine
+    hub.Run(20);
+}
+```
+
+Must be run in a loop as a state machine.
+
+Presents foodtreat for specified duration (*duration_ms* in millseconds) and returns a PACT_... state (table below) to indicate if food was eaten or not (defined in this class).
+
+Advantages: some error checking, returns if food was eaten or not.
+
+Constant name | Constant value | Description
+--------------|----------------|------------
+PACT_BEFORE_PRESENT | 10 | After platter has returned and is in staging mode. Foodmachine may still be active.
+PACT_PLATTER_OUT | 11 |  Platter has been sent out. 
+PACT_WAIT_TIL_BACK | 12 |  Platter is out. Waiting for it to come back.
+PACT_WAIT_DIAG | 13 |  Tray is waiting under the singulator. 
+PACT_RESPONSE_FOODTREAT_NOT_TAKEN | 0 | Foodtreat wasn't read as taken. 
+PACT_RESPONSE_FOODTREAT_TAKEN | 1 | Food treat was read as taken. 
+
+## RetractTray()
+```cpp
+// SYNTAX
+RetractTray()
+
+// EXAMPLE USAGE
+hub.RetractTray();
+```
+Retract the tray (for use with <code>PresentFoodtreat(0)</code>)
+
+## GetNeedsDIReset()
+```cpp
+// SYNTAX
+GetNeedsDIReset()
+
+// EXAMPLE USAGE
+hub.GetNeedsDIReset();
+```
+Return value of _csf_needs_DI_reset
+
+If it returns **true** the Hub's capacitive touchpads need to be reset. 
+
+*(see Run function implementation for use)*
+
+## SetDIResetLock(bool)
+```cpp
+// SYNTAX
+SetDIResetLock(bool)
+
+// EXAMPLE USAGE
+
+// ... do setup that gets game ready to be played ...
+hub.SetDIResetLock(true);
+// ... gameplay code ...
+// end of interaction. Beginning of inter-game period 
+hub.SetDIResetLock(false);
+```
+Pass 1/true to prevent DI (capacitive sensor) reset, set to 0 to allow it - allows a game to control when hub/dli may reset the capacitive touch sensor (DI) board
+
+## ResetDI()
+```cpp
+// EXAMPLE USAGE
+hub.ResetDI();
+```
+Resets the capacitive touch sensor board. 
+
+
+
+<aside class="warning"> Make sure when this functionn is called there's no need to use the touchapds.</aside>
+*(see Run function implementation for use)*
+
+## ResetFoodMachine()
+```cpp
+// EXAMPLE USAGE
+hub.ResetFoodMachine();
+```
+This will reset the food state machine. This can be quite helpful if and when there is a platter that's in the wrong position (e.g., after the platter was forced to stop moving).
+
+## GetButtonVal(unsigned char whichButton)
+```cpp
+// SYNTAX
+GetButtonVal(unsigned char whichButton)
+
+// EXAMPLE USAGE
+hub.GetButtonVal(hub.BUTTON_LEFT); // get a reading from the left touchpad
+```
+Returns analog button reading
+
+*whichButton*: see BUTTON_... constants
+
+## AnyButtonPressed()
+```cpp
+// EXAMPLE USAGE
+unsigned char pressed = hub.AnyButtonPressed();
+
+switch (pressed)
+{
+  case hub.BUTTON_LEFT:
+    Log.info("Pressed left");
+    break;
+  
+  case hub.BUTTON_MIDDLE:
+    Log.info("Pressed middle");
+    break;
+
+  case hub.BUTTON_RIGHT:
+    Log.info("Pressed righ");
+    break;
+}
+```
+
+Returns byte representing bitwise OR of any pressed buttons.
+
+## IsButtonPressed(unsigned char whichButton)
+```cpp
+// SYNTAX
+IsButtonPressed(unsigned char whichButton)
+
+// EXAMPLE USAGE
+bool is_pressed = hub.IsButtonPressed(hub.BUTTON_MIDDLE);
+```
+Returns bool whether specified button is pressed.
+
+*whichButton*: see BUTTON_... constants
+
+## FoodmachineState()
+
+```cpp
+// EXAMPLE USAGE
+hub.PresentAndCheckFoodtreat(5000);
+do
+{
+  yield(false);
+}
+while (hub.FOODMACHINE_IDLE != hub.FoodmachineState());
+
+```
+
+Returns state (*unsigned char*) of food machine per the table below:
+
+Constant name| Value | Description
+-------------|-------|------------
+hub.FOODMACHINE_LID_OPEN | 0 | lid open
+hub.FOODMACHINE_MOVING_HOME | 1 | moving towards home
+hub.FOODMACHINE_CHECK | 2 | checking for foodtreat in bowl
+hub.FOODMACHINE_DISPENSING | 3 | dispensing foodtreat
+hub.FOODMACHINE_IDLE | 4 | waiting with food in bowl
+hub.FOODMACHINE_MOVING_PRESENT | 5 | moving platter towards present
+hub.FOODMACHINE_WAIT | 6 | waiting at present for a time
+hub.FOODMACHINE_MOVING_REMOVE | 7 | moving platter towards remove
+hub.FOODMACHINE_PLATTER_ERROR_CODE | 8 | platter jammed
+hub.FOODMACHINE_SINGULATOR_ERROR_CODE | 9 | singulator jammed
+hub.FOODMACHINE_FOODTREAT_ERROR_CODE | 17 | singluator is empty API says 10, DL says 17
+
+
+## GetDomeOpen()
+
+```cpp
+// EXAMPLE USAGE
+int is_open = hub.GetDomeOpen();
+```
+
+Returns dome open state (int)
+
+Returned| Meaning
+--------|--------
+      -1| unknown
+       0| closed 
+       1| open
+
+## IsDomeRemoved()
+
+```cpp
+// EXAMPLE USAGE
+bool is_removed = hub.IsDomeRemoved();
+```
+
+Returns whether the Hub dome is currently removed.
+
+## SetButtonAudioEnabled(bool buttonAudioEnabled)
+```cpp
+// SYNTAX
+SetButtonAudioEnabled(bool buttonAudioEnabled)
+
+// EXAMPLE USAGE
+
+bool MyGame() 
+{
+  // ... do interaction setup ...
+  hub.SetButtonAudioEnabled(true); // game is ready to go, make touchapds noisier
+
+  // ... game ended, turn off touchpad sounds ...
+  hub.SetButtonAudioEnabled(false);
+
+  return true;
+}
+```
+
+Enable/disable standard touchpad sounds when touchpads are touched.
+
+## SetMaxAudioAmplitude(unsigned char max_audio_amplitude)
+```cpp
+// SYNTAX
+SetMaxAudioAmplitude(unsigned char max_audio_amplitude)
+
+// EXAMPLE USAGE
+hub.SetMaxAudioAmplitude(80);
+```
+
+Set max audio amplitude
+
+*max_audio_amplitude*: [0, 99]
+
+## SetDoPollButtons()
+```cpp
+// EXAMPLE USAGE
+hub.SetDoPollButtons(true);
+```
+Turn button polling on and off (i.e., checking of buttons' states when hub.Run() is called)
+
+## SetDoPollDiagnostics()
+```cpp
+// EXAMPLE USAGE
+SetDoPollDiagnostics(true);
+```
+Turn diagnostic polling (from the HubInterface) on and off.
+
+## IsHubOutOfFood()
+```cpp
+// EXAMPLE USAGE
+bool no_food = hub.IsHubOutOfFood();
+if (no_food)
+{
+  Particle.publish("..."); // (not an actual Particle webhook) perhaps send an SMS message ? 
+}
+```
+Returns true if hub is out of food
+
+## IsSingulatorError()
+
+```cpp
+// EXAMPLE USAGE
+if (hub.IsSingulatorError())
+{
+  Particle.publish("..."); // (not an actual Particle webhook) perhaps send an SMS message ? 
+}
+```
+
+Returns true if singulator error, for example if singulator jammed
+
+## Report()
+```cpp
+// SYNTAX
+Report(String play_start_time, String player, String challenge_id, uint32_t level, String result, uint32_t duration, bool foodtreat_presented, bool foodtreat_eaten)
+
+//////// OR, WITH EXTRA //////////
+
+Report(String play_start_time, String player, String challenge_id, uint32_t level, String result, uint32_t duration, bool foodtreat_presented, bool foodtreat_eaten, String extra)
+
+// EXAMPLE USAGE
+unsigned char pressed = hub.AnyButtonPressed();
+
+String extras = String::format( "{\"pressed\":\"%c%c%c\"}",
+            (pressed & 0b001 ? '1' : '0'),
+            (pressed & 0b010 ? '1' : '0'),
+            (pressed & 0b100 ? '1' : '0'));
+
+// Only record when there was an interaction
+hub.Report( Time.format(Time.now(), TIME_FORMAT_ISO8601_FULL),    // play_start_time
+            "Pet, Clever",                                         // player
+            "LearningTheApi",                                        // challenge_id
+            1,     // difficulty increases with level. So level 1 is 3 pads, level 2 is 2 pads, level 3 is 1 pad
+            "my_result, // result
+            0, // (ms) duration
+            1,   // since we're presenting foodtreats 100% of the time
+            1 ? foodtreat_state == hub.PACT_RESPONSE_FOODTREAT_TAKEN : 0,// foodtreat_eaten
+            extras
+        );
+```
+Sends a report message with standard fields to the particle cloud. Returns true if successful.
+
+ Send a report formatted in JSON to the particle    
+ Cloud with Particle.publish(). The standard name   
+ For the variable is "report". There are 8 standard 
+ values and 1 extra field for custom metrics.       
+
+
+Parameter | Description | Datatype
+----------|-------------|---------
+challenge_id| ID of current challenge  | c string                              
+play_start_time| UTC start time of game   | String
+player| string id of player  | char          
+result| game result  | c string              
+level| game level  | unsigned int            
+duration| duration of game in ms            | unsigned int                          
+foodtreat_presented| if food was presented  | bool                                  
+foodtreat_eaten| if food was eaten  | bool   
+extra| custom field for extra metrics  | char
+
+*Return*                                             
+ * True if successful, False otherwise         
+
+## Report(String play_start_time, String player, String challenge_id, uint32_t level, String result, uint32_t duration, bool foodtreat_presented, bool foodtreat_eaten, String extra)
+```cpp
+// SYNTAX
+
+// EXAMPLE USAGE
+```
+Sends a report message with standard fields and extra field to the particle cloud. Returns true if successful.
+
 
