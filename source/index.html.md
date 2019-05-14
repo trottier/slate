@@ -16,17 +16,13 @@ search: true
 
 # Introduction
 
-HackerPet is a library for programmatically controlling a CleverPet Hub and reporting the data it produces. 
+`hackerpet` is an open source library for programmatically controlling a CleverPet Hub and reporting the data it produces. It takes advantage of the fact that most CleverPet Hubs use a Particle Photon which can be easily replaced with your own.  This library enables your Photon to give you full control over the Hub's touchpads, sounds, and food reward presentation.
 
-Currently, in order to use this library you need to have a CleverPet Hub that uses a Particle Photon. These are Hubs that have a serial number beginning with the letter 'H'. Coverting your Hub into one that works with this library requires that you remove the existing CleverPet Particle Photon, and replace it with one you have set up independently. 
-
-A few things to note: 
-* "Touchpad" and "pad" are the preferred ways to refer to the touchpads. Sometimes, however, you may see a reference to a button. There is no difference. 
-* While most humans have trichromatic vision (all the colors we can see can be described as a combination of red, green, and blue), most dogs and cats are dichromats, able to see the equivalent of yellow and blue. This means that we usually only care about color settings expressed as "BY" rather than "RGB".
+If you've not done so already, please visit [hackerpet.com](https://hackerpet.com)
 
 ## Getting started
 
-HackerPet, along with the complete training curriculum, exists as a library on the Particle platform. One way to access it is through the [Web IDE](https://build.particle.io/libs/hackerpet/). From there you can use one of the example games and flash it to your CleverPet Hub.
+Along with a port of CleverPet's [complete original training curriculum](http://hackerpet.com/cleverpet-curriculum/), hackerpet exists as a [library on the Particle platform.](https://build.particle.io/libs/hackerpet/). 
 
 ```cpp
 #include <hackerpet.h>
@@ -57,7 +53,7 @@ void setup() {
 ### setup() 
 
 
-Within the <code>setup</code> function make sure to setup serial communication with the rest of the Hub and then initialize it.
+Within the <code>setup</code> function make sure to set up serial communication with the rest of the Hub and then initialize it.
 
 ```cpp
 void loop() {
@@ -72,22 +68,19 @@ void loop() {
 
 Usually, you'll have a function that gets called repeatedly within loop() that will control the behavior of your Hub (presenting lights, distributing foodtreats, etc.).
 
-
 # Yield macro "magic"
 
- The HackerPet library provides a set of macros that make programming the Hub much faster, easier, more concise, and more easily understood. These macros let you "yield" from the function, temporarily exiting and re-entering at the same location.  Essentially, these macros grab the function's line number and then jumps back to this line when the function is re-entered. This lets momentarily surrender the Photon to the HackerPet library and give it an opportunity to tell the rest of the Hub to turn on its lights, play sounds, dispense foodtreats, etc.
+ The HackerPet library provides a set of macros that make programming the Hub much faster, more concise, and more easily understood. These macros let you "yield" from the function, temporarily exiting and re-entering at the same position.  Essentially, these macros grab the function's line number and then jump back to this line when the function is re-entered. This lets the funtion momentarily surrender the Photon to the HackerPet library and give it an opportunity to tell the rest of the Hub to turn on its lights, play sounds, dispense foodtreats, etc.
 
 There are a few things to consider when using yield macros:
 
 * They are ideal for moments when your code would block. E.g., during delays or when waiting for input. Yielding can also be helpful when you want to give the HubInterface a moment to send out instructions, as it can only handle so many at once.
 * Functions in which you’d like to use yield(…) must begin with a yield_begin() and a yield_finish(). This is demonstrated in the examples.
 * No recursion allowed.
-* All local variables must be static. This means that they won’t get re-initialized and receive a new value the next time the function is entered, so be sure to explicitly initialize them to the value you want on a different line. To keep things clean, any variable declarations that start with `static` should either not be initialized or be initialized to a value that's obviously "wrong". 
-* Whenever the function “yields” it returns a value. This can be helpful for telling you whether the function is actually over, or if it’s still in process.
-* It can seem a bit weird to loop over a function that’s going to be entered at a different point in its execution every time it’s called, but it works quite well and you’ll get used to it
+* All local variables must be static. This means that they won’t get re-initialized and receive a new value the next time the function is entered, so be sure to explicitly initialize them to the value you want in a separate statement. To keep things clean, any variable declarations that start with `static` should not be initialized.
+* Whenever the function “yields” it returns a value. This can be helpful for telling you whether the function is actually over, or if it’s still working.
 
-
-## Functions
+## Macros
 
 ```cpp
 // EXAMPLE USAGE
@@ -106,7 +99,6 @@ bool MyFunction()
 
 Place this at start of any function that uses yield statement
 
-
 ### yield_finish()
 
 Place at end of any function that uses yield statement
@@ -120,11 +112,9 @@ while (millis() - start_ms < 1000) // Pause for 1000 milliseconds
 }
 ```
 
-### yield(*bool*)
+### yield(*ret*)
 
-Yields execution of your yield enabled function while returning ret.
-Next time your yield enabled function is called, execution will continue the
-last yield point.
+Yield execution of your yield enabled function while returning `ret`. Next time your yield enabled function is called, execution will continue the last yield point.
 
 ```cpp
 // EXAMPLE USAGE
@@ -132,48 +122,42 @@ unsigned long start_wait = Time.now();
 yield_wait_for(Time.now() - start_wait > 10, false) // wait for 10 seconds
 ```
 
-### yield_wait_for(*condition*, *bool*)
+### yield_wait_for(*condition*, *ret*)
 
-Waits for a condition while yielding whenever the condition is not true.
-Passes the ret parameter whenever yielding.
+Wait for a condition while yielding whenever the condition is not true. Passes the `ret` parameter whenever yielding.
 
 ```cpp
 // EXAMPLE USAGE
 yield_sleep(50, false); // wait for 50 us 
 ```
 
-### yield_sleep(*wait_time_in_microseconds*, *bool*)
+### yield_sleep(*wait_time_in_microseconds*, *ret*)
 
-Waits for the specified number of microseconds, yielding while waiting.
-Uses particle micros() function, which overflows when it reaches 2^32
-(i.e., every ~71.6 minutes)
+Wait for the specified number of microseconds, yielding while waiting. Uses particle micros() function, which overflows when it reaches 2^32 (i.e., every ~71.6 minutes)
 
 ```cpp
 // EXAMPLE USAGE
 yield_sleep_ms(300, false); // wait for 300 ms
 ```
 
-### yield_sleep_ms(*wait_time_in_milliseconds*, *bool*)
+### yield_sleep_ms(*wait_time_in_milliseconds*, *ret*)
 
-Waits for the specified number of milliseconds, yielding while waiting.
-Uses millis() function, which overflows and returns to zero every ~49 days
-
+Wait for the specified number of milliseconds, yielding while waiting. Uses millis() function, which overflows and returns to zero every ~49 days
 
 ```cpp
 // EXAMPLE USAGE 
  yield_if(Time.now() > some_time_value, false)
 ```
 
-### yield_if(*bool*, *bool*)
+### yield_if(*bool*, *ret*)
 
-Yields only if a condition is true (e.g. enough time has passed).
-
+Yield only if a condition is true (e.g. enough time has passed).
 
 # HubInterface
 
 ## HubInterface()
 
-The constructor for the HubInterface. The HubInterface is created automatically and this constructor doesn't need to be explicitly called in most games.
+The constructor for the HubInterface. The HubInterface is created automatically and this constructor doesn't usually need to be explicitly called.
 
 ## Run(()
 
@@ -189,7 +173,7 @@ void loop()
 
 ```
 
-Advance the device layer state machine, but with forHowLong millisecond max time spent meant to be run every cycle of a loop() function
+Advance the device layer state machine, with forHowLong milliseconds as the max time available to spend performing library tasks (e.g., communicating with the rest of the device). It is expected that it will be called every cycle of a loop() function.
 
 ## IsReady()
 
@@ -198,7 +182,7 @@ Advance the device layer state machine, but with forHowLong millisecond max time
 bool ready_bool = hub.IsReady();
 ```
 
-Whether or not the hub is ready for communication.
+Whether or not the hub is ready to carry out other commands.
 
 ## SetLights()
 
@@ -213,9 +197,25 @@ SetLights(hub.LIGHT_LEFT, 0, 80, 0); // Make the left touchpad lights blue with 
 hub.SetLights(hub.LIGHT_LEFT | hub.LIGHT_RIGHT, 30, 30, 0);
 ```
 
-Set light colors with slew (overloaded below for flashing) 
+Set light colors with slew (overloaded below for flashing).
 
-*whichLights*: see LIGHT_... constants in this class colors and slew: can be [0, 99] each
+*whichLights*: see LIGHT_... constants 
+
+In this class colors and slew can be between [0, 99] each
+
+Constant   | Value     | Description
+-----------|-----------|------------
+LIGHT_LEFT | 0b00000001| Left touchpad light
+LIGHT_MIDDLE | 0b00000010| Middle touchpad light
+LIGHT_RIGHT | 0b00000100| Right touchpad light
+LIGHT_CUE | 0b00001000| Cue (also "status") light
+LIGHT_BTNS | 0b00000111| All the buttons/touchpads
+LIGHT_ALL | 0b00001111| All the above
+
+
+<aside class="notice">
+While most humans have trichromatic vision (all the colors we can see can be described as a combination of red, green, and blue), most dogs and cats are dichromats only able to see the equivalent of human yellow and blue. This means that, in making games for dogs and cats, we usually only care about color settings expressed as "BY" rather than "RGB".
+</aside>
 
 ## SetLightsRGB()
 
@@ -227,9 +227,22 @@ SetLightsRGB(char whichLights, unsigned char red, unsigned char green, unsigned 
 hub.SetLightsRGB(hub.LIGHT_CUE, 99, 0, 0, 0);
 ```
 
-Set light colors with slew using RGB, not BY colors and slew: can be [0, 99] each
+Set light colors with slew using RGB, not BY colors 
 
-## SetLights()
+In this class colors and slew can be between [0, 99] each
+
+*whichLights*: see LIGHT_... constants 
+
+Constant   | Value     | Description
+-----------|-----------|------------
+LIGHT_LEFT | 0b00000001| Left touchpad light
+LIGHT_MIDDLE | 0b00000010| Middle touchpad light
+LIGHT_RIGHT | 0b00000100| Right touchpad light
+LIGHT_CUE | 0b00001000| Cue (also "status") light
+LIGHT_BTNS | 0b00000111| All the buttons/touchpads
+LIGHT_ALL | 0b00001111| All the above
+
+## SetLights() *flashing variant*
 
 ```cpp
 // SYNTAX
@@ -238,15 +251,28 @@ SetLights(unsigned char whichLights, unsigned char yellow, unsigned char blue, u
 // EXAMPLE USAGE
 hub.SetLights(hub.LIGHT_BTNS, 80, 80, 60, 30); // Every 600 ms set light to flash for 300 
 ```
-Set lights to flash with given period 
+
+Set lights to flash with given period.
 
 *period*: [Period duration] * 10 ms. (0 => no flashing)
 
-*on*: [duty cycle] * 10 ms, must be < period 
+*on*: [duty cycle] * 10 ms, must be < period
 
-*green*, *blue*, *period*, *on*: can be in [0, 99] 
+*green*, *blue*, *period*, *on*: can be in [0, 99]
 
-## SetLightsRGB()
+*whichLights*: see LIGHT_... constants 
+
+Constant   | Value     | Description
+-----------|-----------|------------
+LIGHT_LEFT | 0b00000001| Left touchpad light
+LIGHT_MIDDLE | 0b00000010| Middle touchpad light
+LIGHT_RIGHT | 0b00000100| Right touchpad light
+LIGHT_CUE | 0b00001000| Cue (also "status") light
+LIGHT_BTNS | 0b00000111| All the buttons/touchpads
+LIGHT_ALL | 0b00001111| All the above
+
+## SetLightsRGB() *flashing variant*
+
 ```cpp
 // SYNTAX
 ## SetLightsRGB(unsigned char whichLights, unsigned char red, unsigned char green, unsigned char blue, unsigned char period, unsigned char on)
@@ -255,7 +281,7 @@ Set lights to flash with given period
 hub.SetLightsRGB(hub.LIGHT_ALL, 10, 0, 0, 99, 10); // Every 990 ms set the Hub to flash red for 10 ms
 ```
 
-Set lights to flash with given period, using RGB not BY period in 10 ms increments
+Set lights to flash with given period, using RGB not BY period in 10 ms increments.
 
 *period*: [Period duration] * 10 ms. (0 => no flashing)
 
@@ -263,7 +289,19 @@ Set lights to flash with given period, using RGB not BY period in 10 ms incremen
 
 *red*, *green*, *blue*, *period*, *on*: can be in [0, 99]
 
+*whichLights*: see LIGHT_... constants 
+
+Constant   | Value     | Description
+-----------|-----------|------------
+LIGHT_LEFT | 0b00000001| Left touchpad light
+LIGHT_MIDDLE | 0b00000010| Middle touchpad light
+LIGHT_RIGHT | 0b00000100| Right touchpad light
+LIGHT_CUE | 0b00001000| Cue (also "status") light
+LIGHT_BTNS | 0b00000111| All the buttons/touchpads
+LIGHT_ALL | 0b00001111| All the above
+
 ## SetRandomButtonLights()
+
 ```cpp
 // SYNTAX
 SetRandomButtonLights(unsigned char numLights, unsigned char yellow, unsigned char blue, unsigned char period, unsigned char on)
@@ -272,7 +310,7 @@ SetRandomButtonLights(unsigned char numLights, unsigned char yellow, unsigned ch
 hub.SetRandomButtonLights(2, 60, 60, 0, 0);
 ```
 
-Handy function for randomly picking and illuminating a number of touchpad lights (numLights: how many. Max 3) 
+Convenience function to randomly pick and illuminate a number of touchpad lights (numLights: how many. Max 3).
 
 *returns* tgtLight: bitwise OR of light ID's selected as "targets" 
 
@@ -281,6 +319,10 @@ Handy function for randomly picking and illuminating a number of touchpad lights
 *on*: duty cycle, 10 ms increments. must be < period 
 
 *yellow*, *blue*, *period*, *on*: can be [0, 99] each
+
+<aside class="notice">
+"Touchpad" and "pad" are the preferred ways to refer to the touchpads, but the code sometimes uses "button".
+</aside>
 
 ## PlayAudio()
 
@@ -294,7 +336,21 @@ hub.PlayAudio(hub.AUDIO_SQUEAK, 20);
 
 Play audio according to specified audio file ID.
 
-*whichAudio*: see AUDIO_... constants in this class volume: [0, 99]
+*whichAudio*: see AUDIO_... constants below
+
+*volume*: [0, 99]
+
+Constant name| Description | Used in curriculum |
+-------------|-------------|--------------------|
+|AUDIO_ENTICE| Artificial squeaker        | No  | 
+|AUDIO_POSITIVE| Reward sound             | Yes |
+|AUDIO_DO| Single click                   | Yes | 
+|AUDIO_CLICK| Clicker sound               | No  |
+|AUDIO_SQUEAK| Natural squeaker           | No  |
+|AUDIO_NEGATIVE| Descending low tone      | Yes | 
+|AUDIO_L| Left touchpad sound             | Yes |
+|AUDIO_M| Middle touchpad sound           | Yes |
+|AUDIO_R| Right touchpad sound            | Yes |
 
 ## PlayTone()
 
@@ -310,9 +366,11 @@ Play specified frequency through DL speaker
 
  Variable  | Available values
  --------- | ----------------
- frequency | [0, 20000] Hz. frequency=0 => turn off tone.
+ frequency | [0, 20000] Hz
  volume    | [0, 99]
  slew      | [0, 99]
+
+  *Setting frequency to `0` will stop the tone.*
 
 ## PresentFoodtreat()
 
@@ -324,7 +382,7 @@ PresentFoodtreat(unsigned char duration_decisec)
 hub.PresentFoodtreat(100);
 ```
 
-Presents foodtreat for specified duration, then close tray
+Present foodtreat for specified duration, then close tray.
 
 *duration_decisec*: specified amount of time (duration x 0.1 secs)
 
@@ -332,6 +390,7 @@ Setting duration_decisec to 0 will cause the foodtreat to be presented  indefini
 
 
 ## PresentAndCheckFoodtreat()
+
 ```cpp
 // SYNTAX
 PresentAndCheckFoodtreat(unsigned long duration_ms)
@@ -348,7 +407,7 @@ while (!(pact_state == hub.PACT_RESPONSE_FOODTREAT_TAKEN || pact_state == hub.PA
 
 Must be run in a loop as a state machine.
 
-Presents foodtreat for specified duration (*duration_ms* in millseconds) and returns a PACT_... state (table below) to indicate if food was eaten or not (defined in this class).
+Present foodtreat for specified duration (*duration_ms* in millseconds) and returns a PACT_... state (table below) to indicate if food was eaten or not (defined in this class).
 
 Advantages: some error checking, returns if food was eaten or not.
 
@@ -405,11 +464,9 @@ Pass 1/true to prevent DI (capacitive sensor) reset, set to 0 to allow it - allo
 // EXAMPLE USAGE
 hub.ResetDI();
 ```
-Resets the capacitive touch sensor board. 
+Reset the capacitive touch sensor board.
 
-
-
-<aside class="warning"> Make sure when this functionn is called there's no need to use the touchapds.</aside>
+<aside class="warning"> Make sure when this functionn is called there's no need to use the touchpads.</aside>
 *(see Run function implementation for use)*
 
 ## ResetFoodMachine()
@@ -427,9 +484,15 @@ GetButtonVal(unsigned char whichButton)
 // EXAMPLE USAGE
 hub.GetButtonVal(hub.BUTTON_LEFT); // get a reading from the left touchpad
 ```
-Returns analog button reading
+Return analog touchpad (button) reading.
 
-*whichButton*: see BUTTON_... constants
+*whichButton*: see constants below
+
+Constant   | Value     | Description
+-----------|-----------|------------
+BUTTON_LEFT | LIGHT_LEFT | Left touchpad
+BUTTON_MIDDLE | LIGHT_MIDDLE| Middle touchpad
+BUTTON_RIGHT | LIGHT_RIGHT | Right touchpad
 
 ## AnyButtonPressed()
 ```cpp
@@ -452,7 +515,7 @@ switch (pressed)
 }
 ```
 
-Returns byte representing bitwise OR of any pressed buttons.
+Return byte representing bitwise OR of any pressed buttons.
 
 ## IsButtonPressed(unsigned char whichButton)
 ```cpp
@@ -462,7 +525,7 @@ IsButtonPressed(unsigned char whichButton)
 // EXAMPLE USAGE
 bool is_pressed = hub.IsButtonPressed(hub.BUTTON_MIDDLE);
 ```
-Returns bool whether specified button is pressed.
+Return bool whether specified button is pressed.
 
 *whichButton*: see BUTTON_... constants
 
@@ -479,7 +542,7 @@ while (hub.FOODMACHINE_IDLE != hub.FoodmachineState());
 
 ```
 
-Returns state (*unsigned char*) of food machine per the table below:
+Return state (*unsigned char*) of food machine per the table below:
 
 Constant name| Value | Description
 -------------|-------|------------
@@ -503,7 +566,7 @@ hub.FOODMACHINE_FOODTREAT_ERROR_CODE | 17 | singluator is empty API says 10, DL 
 int is_open = hub.GetDomeOpen();
 ```
 
-Returns dome open state (int)
+Return dome open state (int)
 
 Returned| Meaning
 --------|--------
@@ -518,7 +581,7 @@ Returned| Meaning
 bool is_removed = hub.IsDomeRemoved();
 ```
 
-Returns whether the Hub dome is currently removed.
+Return whether the Hub dome is currently removed.
 
 ## SetButtonAudioEnabled(bool buttonAudioEnabled)
 ```cpp
@@ -577,7 +640,7 @@ if (no_food)
   Particle.publish("..."); // (not an actual Particle webhook) perhaps send an SMS message ? 
 }
 ```
-Returns true if hub is out of food
+Return true if hub is out of food
 
 ## IsSingulatorError()
 
@@ -589,7 +652,7 @@ if (hub.IsSingulatorError())
 }
 ```
 
-Returns true if singulator error, for example if singulator jammed
+Return true if singulator error, for example if singulator jammed
 
 ## Report()
 ```cpp
@@ -649,6 +712,4 @@ extra| custom field for extra metrics  | char
 
 // EXAMPLE USAGE
 ```
-Sends a report message with standard fields and extra field to the particle cloud. Returns true if successful.
-
-
+Send a report message with standard fields and extra field to the particle cloud. Returns true if successful.
