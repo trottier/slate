@@ -5,8 +5,8 @@ language_tabs: # must be one of https://git.io/vQNgJ
   - cpp
 
 toc_footers:
-  - <a href='#'>Sign Up for a Developer Key</a>
   - <a href='https://github.com/CleverPet/HackerPet'>HackerPet Repo</a>
+  - <a class="typeform-share link" href="https://cleverpet.typeform.com/to/Z47lWd" data-mode="popup" style="color:#CDCFD2;text-decoration:underline;font-size:14px;" data-hide-headers=true data-hide-footer=true data-submit-close-delay="5" target="_blank">No Hub? </a> <script> (function() { var qs,js,q,s,d=document, gi=d.getElementById, ce=d.createElement, gt=d.getElementsByTagName, id="typef_orm_share", b="https://embed.typeform.com/"; if(!gi.call(d,id)){ js=ce.call(d,"script"); js.id=id; js.src=b+"embed.js"; q=gt.call(d,"script")[0]; q.parentNode.insertBefore(js,q) } })() </script>
 
 includes:
   - errors
@@ -683,13 +683,8 @@ hub.Report( Time.format(Time.now(), TIME_FORMAT_ISO8601_FULL),    // play_start_
             extras
         );
 ```
-Sends a report message with standard fields to the particle cloud. Returns true if successful.
 
- Send a report formatted in JSON to the particle    
- Cloud with Particle.publish(). The standard name   
- For the variable is "report". There are 8 standard 
- values and 1 extra field for custom metrics.       
-
+Send a report formatted in JSON to the Particle Cloud with Particle.publish(). The standard name for the variable is "report". There are 8 standard values.
 
 Parameter | Description | Datatype
 ----------|-------------|---------
@@ -707,9 +702,5 @@ extra| custom field for extra metrics  | char
  * True if successful, False otherwise         
 
 ## Report(String play_start_time, String player, String challenge_id, uint32_t level, String result, uint32_t duration, bool foodtreat_presented, bool foodtreat_eaten, String extra)
-```cpp
-// SYNTAX
 
-// EXAMPLE USAGE
-```
-Send a report message with standard fields and extra field to the particle cloud. Returns true if successful.
+As above, send a report message with standard fields and extra field to the particle cloud, including a JSON-formatted "extra" field. Returns true if successful.
